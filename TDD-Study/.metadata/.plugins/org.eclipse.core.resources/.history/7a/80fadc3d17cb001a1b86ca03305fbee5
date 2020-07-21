@@ -1,0 +1,44 @@
+package test;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import main.Account;
+
+public class AccountTest {
+	private Account account;
+	private Account account2;
+	private Account account3;
+
+	@Test
+	public void testAccount() throws Exception {
+		account = new Account(10000);
+	}
+	
+	@Test
+	public void testGetBalance() throws Exception {
+		account2 = new Account(10000);
+		assertEquals(10000, account2.getBalance());
+
+		account2 = new Account(1000);
+		assertEquals(1000, account2.getBalance());
+
+		account2 = new Account(0);
+		assertEquals(0, account2.getBalance());
+	}
+	
+	@Test
+	public void testDeposit() throws Exception {
+		account3 = new Account(10000);
+		account3.deposit(1000);
+		assertEquals(11000, account3.getBalance());
+	}
+	
+	@Test
+	public void testWithdraw() throws Exception {
+		Account account = new Account(10000);
+		account.withdraw(1000);
+		assertEquals(9000, account.getBalance());
+	}
+}
