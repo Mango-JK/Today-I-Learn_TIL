@@ -118,11 +118,9 @@
 <br/><hr/>
 
 <center><image src="./images/img01.PNG"></center>
-
 <br/>
 
 <center><image src="./images/img02.PNG"></center>
-
 </br>
 
 가장 기본적인 **Class 생성 메소드**
@@ -132,11 +130,9 @@
 <br/>
 
 <center><image src="./images/img03.PNG"></center>
-
 <br/>
 
 <center><image src="./images/img04.PNG"></center>
-
 <br/>
 
 **생성자를 통해서 Class를 만들고, 3가지 경우에 대해 Test.**
@@ -146,13 +142,11 @@
 <br/>
 
 <center><image src="./images/img05.PNG"></center>
-
 <br/>
 
 ###  🚩 실습 1. 최종 코드
 
 <hr/>
-
 ```java
 package test;
 
@@ -230,8 +224,194 @@ public class Account {
 
 <hr/>
 
+3개의 주석(`//given, //when, //then`)은 다음과 같은 내용을 나타냅니다.
+
+- given
+  - 테스트 기반 환경을 구축하는 단계
+  - 여기선
+  - `@builder`의 사용법도 같이 확인
+- when
+  - 테스트 하고자 하는 행위 선언
+  - 여기선 Posts가 DB에 insert 되는것을 확인하기 위함
+- then
+  - 테스트 결과 검증
+  - 실제로 DB에 insert 되었는지 확인하기 위해 조회후, 입력된 값 확인
 
 
+
+
+
+
+
+
+
+
+
+
+
+<hr>
+
+# 📑 Test Code 예시
+
+1. ## Class 생성 테스트 코드
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class PostsTest {
+    
+	@Test
+    public void 기본생성자_테스트() throws Exception{
+        Posts posts = new Posts();
+    }
+}
+```
+
+
+
+> Class의 기본 생성자를 Test한다.
+
+
+
+2. ## Save 테스트 코드
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class PostsRepositoryTest {
+
+    @Autowired
+    PostsRepository postsRepository;
+
+    @After
+    public void cleanup() {
+        /** 
+        이후 테스트 코드에 영향을 끼치지 않기 위해 
+        테스트 메소드가 끝날때 마다 respository 전체 비우는 코드
+        **/
+        postsRepository.deleteAll();
+    }
+
+    @Test
+    public void 게시글저장_불러오기() {
+        //given
+        postsRepository.save(Posts.builder()
+                .title("테스트 게시글")
+                .content("테스트 본문")
+                .author("jojoldu@gmail.com")
+                .build());
+
+        //when
+        List<Posts> postsList = postsRepository.findAll();
+
+        //then
+        Posts posts = postsList.get(0);
+        assertThat(posts.getTitle(), is("테스트 게시글"));
+        assertThat(posts.getContent(), is("테스트 본문"));
+    }
+}
+```
+
+
+
+> Dto 클래스가 service.save 메소드에 전달되면, DB에 잘 저장되었는지 검증하는 것입니다.
+
+
+
+3. ## Update 테스트 코드
+
+```java
+    @Test
+    public void Posts_수정된다() throws Exception {
+        //given
+        Posts savePosts = postsRepository.save(Posts.builder()
+        .title("title")
+        .content("content")
+        .author("author")
+        .build());
+
+        Long updateId = savePosts.getId();
+        String expectedTitle = "title2";
+        String expectedContent = "content2";
+
+        PostsUpdateRequestDto requestDto = PostsUpdateRequestDto.builder()
+                .title(expectedTitle)
+                .content(expectedContent)
+                .build();
+
+        String url = "http://localhost:" + port + "/api/v1/posts/" + updateId;
+
+        HttpEntity<PostsUpdateRequestDto> requestEntity = new HttpEntity<>(requestDto);
+
+        //when
+        ResponseEntity<Long> responseEntity = restTemplate.exchange(url, HttpMethod.PUT,
+                requestEntity, Long.class);
+
+        //then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseEntity.getBody()).isGreaterThan(0L);
+
+        List<Posts> all = postsRepository.findAll();
+        assertThat(all.get(0).getTitle()).isEqualTo(expectedTitle);
+        assertThat(all.get(0).getContent()).isEqualTo(expectedContent);
+    }
+```
+
+
+
+> Update 메소드가 잘 실행되는지 테스트
+
+
+
+
+
+
+
+## #1. JPA Auditing 테스트 코드
+
+
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class PostsRepositoryTest {
+
+    @Autowired
+    PostsRepository postsRepository;
+
+    @After
+    public void cleanup() {
+        postsRepository.deleteAll();
+    }
+
+    @Test
+    public void BaseTimeEntity_등록 () {
+        //given
+        LocalDateTime now = LocalDateTime.now();
+        postsRepository.save(Posts.builder()
+                .title("테스트 게시글")
+                .content("테스트 본문")
+                .author("jojoldu@gmail.com")
+                .build());
+
+        //when
+        List<Posts> postsList = postsRepository.findAll();
+
+        //then
+        Posts posts = postsList.get(0);
+        assertTrue(posts.getCreatedDate().isAfter(now));
+        assertTrue(posts.getModifiedDate().isAfter(now));
+    }
+}
+```
+
+
+
+> BaseTimeEntity가 잘 적용되었는지 테스트
+
+
+
+<hr/>
 
 
 
