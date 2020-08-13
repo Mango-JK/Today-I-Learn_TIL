@@ -4,11 +4,11 @@
 class Solution {
 
 	int[][] map;
-	int di = { 0, 1, 0, -1 };
-	int dj = { 1, 0, -1, 0 };
+	int[] di = { 0, 1, 0, -1 };
+	int[] dj = { 1, 0, -1, 0 };
 
-	boolean inRange(int i, int j, int n) {
-		return 0 <= i && i < n && 0 <= j && j < n;
+	boolean isRange(int i, int j, int n) {
+		return i < 0 && j < 0 && i >= n && j >= n;
 	}
 
 	public int solution(int n) {
@@ -16,32 +16,37 @@ class Solution {
 		int ci = 0;
 		int cj = 0;
 		int num = 1;
-		
-		while(inRange(ci, cj, n) && map[ci][cj] == 0) {
+
+		int ni = 0;
+		int nj = 0;
+
+		for (int i = 0; i < n * n; i++) {
+			map[ci][cj] = num++;
+
 			for (int k = 0; k < 4; k++) {
-				if(!inRange(ci, cj, n) || map[ci][cj] != 0)
-					break;
+				ni = ci + di[k];
+				nj = cj + dj[k];
 				
-				map[ci][cj] = num++;
-				int ni = ci + di[k];
-				int nj = cj + dj[k];
-				
-				if(!inRange(ni, nj, n) || map[ni][nj] != 0) {
-					ci += di[(k+1) % 4];
-					cj += dj[(k+1) % 4];
-					break;
+				if(!isRange(ni, nj, n) || map[ni][nj] != 0) {
+					ni -= di[k];
+					nj -= dj[k];
 				}
-				
-				ci = ni;
-				cj = nj;
-			}	// end K
-		}	// end while
+				break;
+			}
+		}
+		
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				System.out.println(map[i][j] + " ");
+			}
+			System.out.println();
+		}
 	}
 
 	// The following is main method to output testcase.
 	public static void main(String[] args) {
 		Solution sol = new Solution();
-		int n1 = 3;
+		int n1 = 5;
 		int ret1 = sol.solution(n1);
 		for (int i = 0; i < n1; i++) {
 			for (int j = 0; j < n1; j++) {

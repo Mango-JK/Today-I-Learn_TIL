@@ -5,7 +5,6 @@ class Solution{
     boolean inRange(int i, int j, int n){
         return 0 <= i && i < n && 0 <= j && j < n;
     }
-
     public int solution(int n){
         pane = new int[n][n];
         int ci = 0;
@@ -28,7 +27,6 @@ class Solution{
                 }
             }
         }
-        
         int ans = 0;
         for(int i = 0; i < n; i++) ans += pane[i][i];
         return ans;
