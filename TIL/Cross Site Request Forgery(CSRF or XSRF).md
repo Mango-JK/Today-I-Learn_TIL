@@ -232,9 +232,31 @@ POST로 요청을 보내지만 실제 서버에서는 POST 방식과 GET 방식 
 
 
 
+<hr/>
+
+<hr/>
+
+## SEED Lab
+
+주제
+
+1. CSRF(사이트간 요청 위조) 공격
+2. CSRF 대책
+   - 비밀 토큰 및 동일 사이트 쿠키
+3. HTTP GET 및 POST 요청
+4. Javascript와 Ajax
 
 
 
+```javascript
+// Attacker’s website
+URL: http://www.csrflabattacker.com
+Folder: /var/www/CSRF/Attacker/
+
+// Victim website (Elgg)
+URL: http://www.csrflabelgg.com
+Folder: /var/www/CSRF/Elgg/
+```
 
 
 
