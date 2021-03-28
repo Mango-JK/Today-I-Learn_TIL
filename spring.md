@@ -274,3 +274,111 @@ System.out.println(keesunProperties.getName());
   
 ```
 
+
+
+#### 프로파일
+
+##### @Profile 애노테이션은 어디에?
+
+- @Configuration
+- Component
+
+##### 어떤 프로파일을 활성화 할 것인가?
+
+- spring.profiles.active
+
+##### 어떤 프로파일을 추가할 것인가?
+
+- spring.profiles.include
+
+##### 프로파일용 프로퍼티
+
+- application-{profile}.properties
+
+
+
+```java
+// 이 Bean은 Profile이 "test"일 때 사용이 됨.
+@Profile("test")
+@Configuration
+public class TestConfiguration {
+
+    @Bean
+    public String hello() {
+        return "Hello Test";
+    }
+}
+
+// in application.properties
+spring.profiles.active=test
+  
+// 결과 확인
+    @Autowired
+    private String hello;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        System.out.println("=======================");
+        System.out.println(hello);
+        System.out.println("=======================");
+    }
+```
+
+
+
+<hr/>
+
+#### 로깅
+
+
+
+**<u>로깅 퍼사드</u> 장점: framework에서 사용하는 모든 애플리케이션이 사용하고 싶은 로거를 바꿔가며 사용할 수 있다.**
+
+
+
+로깅 퍼사드 VS 로거
+
+- Commons Logging, Slf4j
+  - Logger를 추상화해놓은 것
+- JUL, Log4j2, Logback
+
+
+
+```java
+// in application.properties
+spring.output.ansi.enabled=always // log color로 보기
+logging.path:logs	// log 디렉토리에 spring.log 파일로 로그 저장
+logging.level.me.whiteship.springinit=DEBUG	// log 디버그 모드로 보기
+
+// in code
+private Logger logger = new LoggerFactory.getLogger(SampleRunner.class);
+logger.info("hello");
+```
+
+
+
+##### 커스텀 로그 설정 파일 사용하기
+
+- Logback : logback-spring.xml
+- Log4J2 : log4j2-spring.xml
+
+
+
+##### 로거를 Log4j2로 변경하기
+
+- pom.xml "spring-boot-starter" 에서 exclude를 통해 spring-boot-starter-logging 제거
+- <artifactId>spring-boot-starter-log4j2</artifactId> 추가
+
+
+
+<hr/>
+
+#### 테스트
+
+```java
+// in pom.xml
+spring-boot-starter-test 추가
+  
+
+```
+
