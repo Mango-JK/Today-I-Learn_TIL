@@ -302,7 +302,6 @@ System.out.println(keesunProperties.getName());
 @Profile("test")
 @Configuration
 public class TestConfiguration {
-
     @Bean
     public String hello() {
         return "Hello Test";
@@ -311,6 +310,12 @@ public class TestConfiguration {
 
 // in application.properties
 spring.profiles.active=test
+  
+// 실행 시
+  java -jar spring.jar --spring.profiles.active=prod
+  
+// 또는
+  application-prod.properties 설정 파일을 생성함
   
 // 결과 확인
     @Autowired
