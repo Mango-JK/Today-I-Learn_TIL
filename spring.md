@@ -380,10 +380,304 @@ logger.info("hello");
 
 #### 테스트
 
+시작은 일단 spring-boot-test를 추가하는 것부터
+
 ```java
 // in pom.xml
 spring-boot-starter-test 추가
+```
+
+
+
+##### @SpringBootTest
+
+- 빈 설정 파일은 설정을 안해주나? 
+  - 알아서 찾는다.(@SpringBootApplication)
+- webEnvironment
+  - MOCK : mock servlet environment. 내장 톰캣 구동 안함
+  - RANDOM_PORT, DEFINED_PORT : 내장 톰캣 사용
+  - NONE : 서블릿 환경 제공 안함
+
+
+
+```java
+// MOCK 을 사용한 경우
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+public class SampleControllerTest {
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Test
+    public void hello() {
+        try {
+            mockMvc.perform(get("/hello"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("hello keesun"))
+                    .andDo(print());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// TestRestTemplate 를 사용한 경우
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class SampleControllerTest {
+
+    @Autowired
+    TestRestTemplate testRestTemplate;
+
+    @Test
+    public void hello() {
+        try {
+            String result = testRestTemplate.getForObject("/hello", String.class);
+            assertThat(result).isEqualTo("hello keesun");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// Service만 테스트하고 싶은 경우
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class SampleControllerTest {
+
+    @MockBean
+    SampleService mockSampleService;
+
+    @Test
+    public void hello() {
+        try {
+            when(mockSampleService.getName()).thenReturn("keesun");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
   
 
+@MockBean
+
+- ApplicationContext에 들어 있는 빈을 Mock으로 만든 객체로 교체함.
+- 모든 @Test 마다 자동으로 리셋.
+
+슬라이스 테스트
+
+- 레이버렬로 잘라서 테스트하고 싶을 때
+- @Json Test
+- @WebMvc Test
+- WebFlux Test
+- DataJpa Test
+- ...
+
+
+
+WebTestClient
+
+- WebFlux를 사용하는 경우는 비동기이므로 테스트에서 비동기를 사용할 경우 이용함
+
+```java
+@Auto
 ```
+
+
+
+<hr/>
+
+스프링 웹 MVC 1부
+
+- 스프링 부트 MVC
+  - 자동 설정으로 제공하는 여러 기본 기능
+- 스프링 MVC 확장
+  - @Configuration + WebMvcConfigurer
+- 스프링 MVC 재정의
+  - @Configuration + @EnableWebMvc
+
+
+
+### HttpMessageConverters
+
+HTTP 요청 본문을 객체로 변경하거나, 객체를 HTTP 응답 본문으로 변경할 때 사용.
+
+{"username":"keesun", "password":"123} <--> User
+
+- RequestBody
+- ResponseBody
+
+
+
+```java
+// UserControllerTest 
+@WebMvcTest(UserController.class)
+class UserControllerTest {
+
+    @Autowired
+    MockMvc mockMvc;
+
+// String으로 JSON 입력 - USER 형태 JSON 출력
+    @Test
+    public void createUser_Json() throws Exception {
+        String userJson = "{\"username\":\"keesun\", \"password\":\"123\"}";
+        mockMvc.perform(post("/users/create")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .content(userJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username",
+                        is(equalTo("keesun"))))
+                .andExpect(jsonPath("$.password",
+                        is(equalTo("123"))));
+    }
+}
+
+
+// in UserController
+    @PostMapping("/users/create")
+    public User create(@RequestBody User user) {
+        return user;
+     }
+```
+
+
+
+스프링 부트
+
+- 뷰 리졸버 설정 제공
+- HttpMessageConvertersAutoConfiguration
+
+```java
+// XML 메시지 컨버터 추가하기
+<dependency>
+  <groupId>com.fasterxml.jackson.dataformat</groupId>
+  <artifactId>jackson-dataformat-xml</artifactId>
+</dependency>
+```
+
+​    
+
+정적 리소스 지원
+
+정적 리소스 맵핑 "/**"
+
+- 기본 리소스 위치
+  - Classpath:/static
+  - Classpath:/public
+  - Classpath:/resources
+  - Classpath:/META-INF/resources
+  - spring.mvc.static-path-pattern: 맵핑 설정 변경 가능
+  - spring.mvc.static-locations: 리소스 찾을 위치 변경 가능
+- Last-Modified 헤더를 보고 304 응답을 보냄
+- ResourceHttpRequestHandler 가 처리함.
+  - **<u>WebMvcConfigurer의 addResourceHandler로 커스터마이징 할 수 있음</u>**
+
+```java
+// in config/WebConfig
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/m/**")
+                .addResourceLocations("classpath:/m/")
+                .setCachePeriod(20);
+    }
+}
+
+// 이후
+localhost:8080/m/hello.html 로 확인
+```
+
+
+
+#### Thymeleaf
+
+스프링 부트가 자동 설정을 지원하는 템플릿 엔진
+
+- FreeMarker
+- Groovy
+- Thymeleaf
+- Mustache
+
+
+
+JSP 사용은 권장하지 않음
+
+- JAR 패키징 할 때는 동작하지 않고, WAR 패키징 해야 함
+
+
+
+##### HTML Unit
+
+- HTML 테스트를 체계적으로 할 수 있는 툴
+  - dependency 추가해서 사용할 수 있음
+
+**WebClient** 를 주입받아서 사용함
+
+
+
+#####  ExceptionHandler
+
+스프링 @MVC 예외 처리 방법
+
+- **@ControllerAdvice**
+- **@ExchangeHandler**
+
+
+
+스프링 부트가 제공하는 기본 예외 처리기
+
+- BasicErrorController
+  - HTML과 JSON 응답 지원
+- 커스터마이징 방법
+  - ErrorController 구현
+
+
+
+커스텀 에러 페이지
+
+- 상태 코드 값에 따라 에러 페이지 보여주기
+- src/main/resources/static/template/error
+- 404 html
+- 5xx.html
+- ErrorViewResolver 구현
+
+
+
+##### SOP와 CORS
+
+- **Single-Origin Policy** (SOP)
+- **Cross-Origin Resource Sharing** (CORS)
+- **Origin?**
+  - URI 스키마 (http, https)
+  - hostname (whiteship.me, localhost)
+  - 포트 (8080, 18080)
+
+
+
+스프링 MVC @Origin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
