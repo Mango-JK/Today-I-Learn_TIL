@@ -659,25 +659,123 @@ JSP 사용은 권장하지 않음
 
 
 
-스프링 MVC @Origin
+-> 하나의 오리진 (ex- localhost:8080)이 다른 오리진 (ex- localhost:18080)의 리소스를 가져오려고 해도 막혀있다.
+
+-> 이를 우회하기 위한 방법으로 Cross-Origin Resource Sharing 기술이 생겨났고
+
+-> Springboot가 제공하는 @CrossOrigin 어노테이션을 통해 CORS 기술을 사용할 수 있게 되었다.
 
 
 
+##### 스프링 MVC @Origin
+
+```java
+@CrossOrigin(origins="http://localhost:8080")
+@GetMapping("/hello")
+public String hello(){
+	return "Hello";
+}
+```
+
+<hr/>
+
+#### 스프링 데이터
+
+##### 인메모리 데이터베이스
+
+지원하는 인-메모리 데이터베이스
+
+- H2(추천, 콘솔 때문에..)
+- HSQL
+- Derby
+- Spring-JDBC가 클래스패스에 있으면 자동 설정이 필요한 빈을 설정 해줍니다.
+  - DataSource
+  - JdbcTemplate
 
 
 
+인-메모리 데이터베이스 기본 연결 정보 확인하는 방법
+
+- URL: "testdb"
+- Username: "sa"
+- password: ""
 
 
 
+H2 콘솔 사용하는 방법
+
+- spring-boot-devtools를 추가하거나
+- spring.h2.console.enabled=true 만 추가
+- /h2-consolefh wjqthr
 
 
 
+```java
+@Component
+public class H2Runner implements ApplicationRunner {
+
+	@Autowired
+	DataSource dataSource;
+
+	@Autowired
+	JdbcTemplate jdbcTemplate;
+
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		try (Connection connection = dataSource.getConnection()) {
+			connection.getMetaData().getURL();
+			connection.getMetaData().getUserName();
+
+			Statement statement = connection.createStatement();
+			String sql = "CREATE TABLE USER(ID INTEGER NOT NULL, name VARCHAR(255), PRIMARY KEY (id))";
+			statement.executeUpdate(sql);
+		}
+		jdbcTemplate.execute("INSERT INTO USER VALUES (1, 'keesun')");
+	}
+}
+```
 
 
 
+##### MYSQL 설정하기
+
+지원하는 DBCP
+
+- HikariCP (기본)
+- Tomcat CP
+- Commons DBCP2
 
 
 
+DBCP 설정
+
+- **spring.datasource.hikari**
+- spring.datasource.tomcat
+- spring.datasource.dbcp2
+
+
+
+MySQL용 Datasource 설정
+
+- Spring.datasource.url=jdbc:mysql://localhost:330/springboot?useSSL=false
+- Spring.datasource.username=keesun
+- spring.datasource.password=pass
+- 운영 DB용 설정
+  - Spring.datasource.testWhileIdle=true
+  - spring.datasource.validationQuery=SELECT 1
+
+
+
+```java
+// ConnectionTimeout
+어플리케이션이 DB 커넥션풀에서 커넥션을 받아올 때,
+	얼마 동안 기다릴지에 대한 설정. 기본값 30초 -> 연결 요청 후 30초가 지나면 에러
+    
+// maximumPoolSize
+최대 커넥션풀의 커넥션 갯수. (무조건 많다고 좋은게 아니다.)
+    기본값 10개 -> 최적화 값을 찾는게 좋다.
+    
+```
 
 
 
