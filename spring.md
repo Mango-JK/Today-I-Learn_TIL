@@ -779,3 +779,138 @@ MySQL용 Datasource 설정
 
 
 
+##### 데이터베이스 초기화
+
+JPA를 사용한 데이터베이스 초기화
+
+- spring.jpa.hibernate.ddl-auto
+- spring.jpa.generate-dll=true로 설정 해줘야 동작함.
+
+ SQL 스크립트를 사용한 데이터베이스 초기화
+
+- schema.sql 또는 schema-${platform}.sql
+- data.sql 또는 data-${platform}.sql
+- ${platform} 값은 spring.datasource.platform 으로 설정 가능.
+
+
+
+##### 데이터 마이그레이션
+
+### 의존성 추가
+
+- org.flywaydb:flyway-core
+
+### 마이그레이션 디렉토리
+
+- db/migration 또는 db/migration/{vendor}
+- spring.flyway.locations로 변경 가능
+
+### 마이그레이션 파일 이름
+
+- V숫자__이름.sql
+- V는 꼭 대문자로.
+- 숫자는 순차적으로 (타임스탬프 권장)
+- 숫자와 이름 사이에 언더바 **두 개**.
+- 이름은 가능한 서술적으로.
+
+
+
+##### Redis
+
+캐시, 메시지 브로커, 키/밸류 스토어 등으로 사용 가능.
+
+- 의존성 추가
+  - spring-boot-starter-data-redis
+- Redis 설치 및 실행 (도커)
+  - docker run -p 6379:6379 --name redis_boot -d redis
+  - docker exec -i -t redis_boot redis-cli
+- 스프링 데이터 Redis
+  - https://projects.spring.io/spring-data-redis/
+  - StringRedisTemplate 또는 RedisTemplate
+  - extends CrudRepository
+- Redis 주요 커맨드
+  - https://redis.io/commands
+  - keys *
+  - get {key}
+  - hgetall {key}
+  - hget {key} {column}
+
+- 커스터마이징
+  - spring.redis.*
+
+
+
+#### MongoDB
+
+[MongoDB](https://www.mongodb.com/)는 JSON 기반의 도큐먼트 데이터베이스입니다.
+
+- 의존성 추가
+  - spring-boot-starter-data-mongodb
+- MongoDB 설치 및 실행 (도커)
+  - docker run -p 27017:27017 --name mongo_boot -d mongo
+  - docker exec -i -t mongo_boot bash
+  - mongo
+- 스프링 데이터 몽고DB
+  - MongoTemplate
+  - MongoRepository
+  - 내장형 MongoDB (테스트용)
+    - de.flapdoodle.embed:de.flapdoodle.embed.mongo
+  - @DataMongoTest
+
+```java
+// in mongo repository
+public interface AccountRepository extends MongoRepository<Account, String> {
+}
+
+// in main
+@SpringBootApplication
+public class SpringbootmongoApplication {
+  @Autowired
+  AccountRepository accountRepository;
+  
+  public static void main(String[] args) {
+    SpringApplication.run(SpringbootmongoApplication.class, args);
+  }
+  
+  @Bean
+  public ApplicationRunner applicationRunner(){
+    return args -> {
+      Account account = new Account();
+      account.setEmail("whuewhue");
+      account.setUsername("wejkqwej");
+      accountRepository.inser(account);
+    }
+  }
+}
+```
+
+
+
+<hr/>
+
+#### 스프링 시큐리티
+
+- 웹 시큐리티
+- 메소드 시큐리티
+- 다양한 인증 방법 지원
+  - LDAP, 폼 인증, Basic 인증, OAuth, ...
+
+#### 스프링 부트 시큐리티 자동 설정
+
+- SecurityAutoConfiguration
+- UserDetailsServiceAutoConfiguration
+- spring-boot-starter-security
+  - 스프링 시큐리티 5.* 의존성 추가
+- 모든 요청에 인증이 필요함.
+- 기본 사용자 생성
+  - Username: user
+  - Password: 애플리케이션을 실행할 때 마다 랜덤 값 생성 (콘솔에 출력 됨.)
+  - spring.security.user.name
+  - spring.security.user.password
+- 인증 관련 각종 이벤트 발생
+  - DefaultAuthenticationEventPublisher 빈 등록
+  - 다양한 인증 에러 핸들러 등록 가능
+
+#### 스프링 부트 시큐리티 테스트
+
+- https://docs.spring.io/spring-security/site/docs/current/reference/html/test-method.html
